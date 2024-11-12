@@ -1,56 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Upload</title>
+  <title>პოსტების ატვირთვა</title>
+  <style>
+    /* ბექგრაუნდი და ზოგადი სტილები */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 10px 0;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    .post {
+      background-color: #fff;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .post img {
+      max-width: 100%;
+      height: auto;
+    }
+    /* ფორმის სტილები */
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: none; /* ფორმა იმალება იმ დროისთვის, სანამ კოდი არ იქნება სწორი */
+    }
+    form input, form textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    form button {
+      padding: 10px 20px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    form button:hover {
+      background-color: #555;
+    }
+    /* ღილაკის სტილები */
+    #showFormButton {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #showFormButton:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 <body>
-  <h1>Upload a File</h1>
-  
-  <!-- ფორმა, რომელიც სერვერზე მონაცემებს აგზავნის -->
-  <form id="uploadForm" enctype="multipart/form-data">
-    <label for="fileInput">Choose a file:</label>
-    <input type="file" name="image" id="fileInput" required><br><br>
-    
-    <label for="titleInput">Title:</label>
-    <input type="text" name="title" id="titleInput" required><br><br>
-    
-    <label for="contentInput">Content:</label>
-    <input type="text" name="content" id="contentInput" required><br><br>
-    
-    <button type="submit">Upload</button>
-  </form>
+  <header>
+    <h1>პოსტების ატვირთვა</h1>
+  </header>
 
-  <div id="responseMessage"></div>
+  <div class="container">
+    <!-- ღილაკი, რომელიც ანიჭებს პაროლის მოთხოვნას -->
+    <button id="showFormButton">ატვირთვის ფორმის ნახვა</button>
+
+    <!-- ფორმა ატვირთვისთვის -->
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="text" id="title" name="title" placeholder="პოსტის სათაური" required>
+      <textarea id="content" name="content" placeholder="პოსტის აღწერა" required></textarea>
+      <input type="file" id="image" name="image">
+      <button type="submit">ატვირთვა</button>
+    </form>
+
+    <!-- პოსტების ჩვენება -->
+    <center><div id="posts-container"></div></center>
+  </div>
 
   <script>
-    // ფორმის გაგზავნის მოვლენა
-    document.querySelector('#uploadForm').addEventListener('submit', async function (event) {
-      event.preventDefault(); // გვერდის გადატვირთვის თავიდან აცილება
+    const correctCode = "wami123";  // შეცვალეთ თქვენი კოდი აქ
 
-      const formData = new FormData(this); // ფორმიდან მონაცემების აღება
-
-      try {
-        // Fetch API-თ მონაცემების გაგზავნა
-        const response = await fetch('http://localhost:3000', {
-          method: 'POST',
-          body: formData
-        });
-
-        // პასუხის დამუშავება
-        if (response.ok) {
-          const result = await response.json();
-          document.getElementById('responseMessage').textContent = 'Upload successful!';
-          console.log(result);
-        } else {
-          document.getElementById('responseMessage').textContent = 'Error uploading.';
-        }
-      } catch (error) {
-        document.getElementById('responseMessage').textContent = 'Failed to fetch. Check server.';
-        console.error('Error:', error);
+    document.getElementById('showFormButton').addEventListener('click', function() {
+      // პაროლის შემოწმება
+      const password = prompt('გთხოვთ, შეყაროთ პაროლი:');
+      if (password === correctCode) {
+        // თუ პაროლი სწორია, ჩვენება ფორმა
+        document.getElementById('uploadForm').style.display = 'block';
+        alert('პაროლი სწორია, შეგიძლიათ ატვირთოთ პოსტები!');
+      } else {
+        alert('პაროლი არასწორია!');
       }
     });
+
+    // პოსტების ატვირთვა სერვერზე
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // ფორმის წარუმატებლობის თავიდან ასაცილებლად
+
+      const formData = new FormData();
+      formData.append('title', document.getElementById('title').value);
+      formData.append('content', document.getElementById('content').value);
+      formData.append('image', document.getElementById('image').files[0]);
+
+      // POST მოთხოვნა სერვერზე
+      fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+        loadPosts(); // პოსტების გადმოწერა და ჩვენება
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    });
+
+    // პოსტების ჩამოტვირთვა და ჩვენება
+function loadPosts() {
+  fetch('http://localhost:3000/posts')
+    .then(response => response.json())
+    .then(data => {
+      const postsContainer = document.getElementById('posts-container');
+      postsContainer.innerHTML = ''; // ვაშლით პოსტების კონტეინერი
+
+      // ციკლი პოსტების განთავსებისთვის, დალაგება უკანასკნელი პირველი
+      data.reverse().forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
+        postElement.innerHTML = `
+          <h3>${post.title}</h3>
+          <p>${post.content}</p>
+          ${post.image ? `<img src="uploads/${post.image}" alt="${post.title}">` : ''}
+        `;
+        postsContainer.appendChild(postElement);
+      });
+    })
+    .catch(error => console.error('Error fetching posts:', error));
+}
+
+    // საიტის გაშვებისას ჩამოტვირთეთ პოსტები
+    loadPosts();
   </script>
 </body>
 </html>

@@ -16,12 +16,11 @@ app.use(cors({
 // Multer-ის კონფიგურაცია ფაილების ატვირთვისთვის
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // ატვირთული ფაილის ფოლდერის შექმნა, თუ არ არსებობს
     const uploadDir = 'uploads';
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir); // ფოლდერის შექმნა
+      fs.mkdirSync(uploadDir); // ატვირთული ფაილის ფოლდერის შექმნა, თუ არ არსებობს
     }
-    cb(null, uploadDir); // ფაილების ატვირთვა ამ ფოლდერში
+    cb(null, uploadDir); // ფაილის ატვირთვა ამ ფოლდერში
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname); // უნიკალური სახელის მინიჭება
@@ -34,7 +33,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// ატვირთული პოსტების შენახვა JSON ფაილში
+// პოსტების JSON ფაილში შენახვა
 const postsFile = 'posts.json';
 
 // ატვირთვის ფუნქცია
@@ -48,17 +47,17 @@ app.post('/upload', upload.single('image'), (req, res) => {
   // პოსტების კითხვა და დამატება
   fs.readFile(postsFile, 'utf8', (err, data) => {
     if (err) {
-      return res.status(500).send('Error reading posts file');
+      return res.status(500).json({ message: 'Error reading posts file' });
     }
     const posts = data ? JSON.parse(data) : [];
     posts.push(post);
 
     // პოსტების ჩაწერა ფაილში
-    fs.writeFile(postsFile, JSON.stringify(posts, null, 2), err => {
+    fs.writeFile(postsFile, JSON.stringify(posts, null, 2), (err) => {
       if (err) {
-        return res.status(500).send('Error saving post');
+        return res.status(500).json({ message: 'Error saving post' });
       }
-      res.send('Post uploaded successfully');
+      res.json({ message: 'Post uploaded successfully' }); // JSON ფორმატში პასუხი
     });
   });
 });
@@ -67,10 +66,10 @@ app.post('/upload', upload.single('image'), (req, res) => {
 app.get('/posts', (req, res) => {
   fs.readFile(postsFile, 'utf8', (err, data) => {
     if (err) {
-      return res.status(500).send('Error reading posts');
+      return res.status(500).json({ message: 'Error reading posts' });
     }
     const posts = data ? JSON.parse(data) : [];
-    res.json(posts);
+    res.json(posts); // JSON ფორმატში პასუხი
   });
 });
 
